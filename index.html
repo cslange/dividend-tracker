@@ -13,7 +13,7 @@
         <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 pb-6">
             <div>
                 <h1 class="text-3xl font-extrabold text-emerald-700 tracking-tight flex items-center gap-2">🤖 Automated Dividend Tracker</h1>
-                <p id="appSubtitle" class="text-slate-500 mt-1">Manage equity shares, annual income payout metrics, and target yields.</p>
+                <p id="appSubtitle" class="text-slate-500 mt-1">Loading dashboard settings...</p>
             </div>
             <div id="modeBadge" class="text-xs font-bold px-3 py-1 rounded-full shadow-xs"></div>
         </header>
@@ -113,7 +113,8 @@
         const PROXY_URL = "https://dividend-proxy.corslange.workers.dev"; 
 
         const urlParams = new URLSearchParams(window.location.search);
-        const isAdmin = urlParams.get('admin') === 'ja';
+        // Robust parameter query lookup handling trailing slashes cleanly
+        const isAdmin = urlParams.get('admin') === 'ja' || window.location.href.includes('admin=ja');
 
         let assets = JSON.parse(localStorage.getItem('autoDividendPortfolio')) || [];
         let editIndex = null;
@@ -140,6 +141,8 @@
             modeBadge.textContent = "🛠️ API MANAGER MODUS";
             modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 shadow-xs";
         } else {
+            adminPanel.classList.add('hidden');
+            ledgerContainer.classList.replace('lg:col-span-2', 'lg:col-span-3');
             appSubtitle.textContent = "Real-time automated analytics engine visualizer.";
             modeBadge.textContent = "👀 AUTOMATED VIEWER";
             modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 shadow-xs";
@@ -172,14 +175,11 @@
 
             assets.forEach((asset, idx) => {
                 const rawData = asset.rawDividends || [];
-                // Filter payouts to calculate an expected annual average baseline smoothly
                 const standardYearlyPayouts = rawData.filter(d => new Date(d.date).getFullYear() >= (currentYear - 2));
                 
-                // If there are dividend payments, sum up the total payout per share per year
                 let totalAnnualValuePerShare = 0;
                 if (standardYearlyPayouts.length > 0) {
                      const totalSum = standardYearlyPayouts.reduce((sum, item) => sum + (item.adjDividend || item.dividend || 0), 0);
-                     // Average it out over unique years found in data
                      const uniqueYears = [...new Set(standardYearlyPayouts.map(d => new Date(d.date).getFullYear()))].length || 1;
                      totalAnnualValuePerShare = totalSum / uniqueYears;
                 }
@@ -266,4 +266,118 @@
         }
 
         function drawCharts(labels, currentData, targetData, monthlyDistribution) {
-            if (comparisonChartInstance)
+            if (comparisonChartInstance) comparisonChartInstance.destroy();
+            if (calendarChartInstance) calendarChartInstance.destroy();
+
+            const ctx1 = document.getElementById('targetVsCurrentChart').getContext('2d');
+            comparisonChartInstance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Current Income', data: currentData, backgroundColor: '#10b981' },
+                        { label: 'Target Goal', data: targetData, backgroundColor: '#3b82f6' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx2 = document.getElementById('monthlyCalendarChart').getContext('2d');
+            calendarChartInstance = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Projected Cashflow',
+                        data: monthlyDistribution,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.05)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        if (isAdmin) {
+            stockForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const tickerInput = document.getElementById('ticker').value.trim().toUpperCase();
+                const documentBtnText = document.getElementById('btnText');
+                
+                documentBtnText.textContent = "Fetching Live Data...";
+                submitBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`${PROXY_URL}?ticker=${tickerInput}`);
+                    const data = await response.json();
+
+                    if (!data || !data.historical) {
+                        alert("Ticker not found or API limits exceeded.");
+                        resetFormState();
+                        return;
+                    }
+
+                    const payload = {
+                        stockName: document.getElementById('stockName').value.trim(),
+                        ticker: tickerInput,
+                        sharesCount: document.getElementById('sharesCount').value,
+                        dividendGoal: document.getElementById('dividendGoal').value,
+                        rawDividends: data.historical
+                    };
+
+                    if (editIndex !== null) {
+                        assets[editIndex] = payload;
+                        editIndex = null;
+                    } else {
+                        assets.push(payload);
+                    }
+
+                    localStorage.setItem('autoDividendPortfolio', JSON.stringify(assets));
+                    calculateAndRenderAll();
+                    resetFormState();
+                } catch (err) {
+                    alert("Error calling server proxy worker backend pipeline.");
+                    console.error(err);
+                } finally {
+                    documentBtnText.textContent = "Save & Fetch Data";
+                    submitBtn.disabled = false;
+                }
+            });
+
+            window.startEditAsset = function(idx) {
+                editIndex = idx;
+                const asset = assets[idx];
+                document.getElementById('stockName').value = asset.stockName;
+                document.getElementById('ticker').value = asset.ticker;
+                document.getElementById('sharesCount').value = asset.sharesCount;
+                document.getElementById('dividendGoal').value = asset.dividendGoal;
+
+                formTitle.textContent = "Modify Asset Position";
+                submitBtn.textContent = "Update Position Info";
+                cancelEditBtn.classList.remove('hidden');
+            };
+
+            window.deleteAsset = function(idx) {
+                if (confirm(`Remove ${assets[idx].ticker}?`)) {
+                    if (editIndex === idx) resetFormState();
+                    assets.splice(idx, 1);
+                    localStorage.setItem('autoDividendPortfolio', JSON.stringify(assets));
+                    calculateAndRenderAll();
+                }
+            };
+        }
+
+        window.resetFormState = function() {
+            editIndex = null;
+            stockForm.reset();
+            formTitle.textContent = "Add Automated Position";
+            cancelEditBtn.classList.add('hidden');
+        };
+
+        // Run calculations
+        calculateAndRenderAll();
+    </script>
+</body>
+</html>
