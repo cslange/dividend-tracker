@@ -13,7 +13,7 @@
         <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 pb-6">
             <div>
                 <h1 class="text-3xl font-extrabold text-emerald-700 tracking-tight flex items-center gap-2">🤖 Automated Dividend Tracker</h1>
-                <p id="appSubtitle" class="text-slate-500 mt-1">Loading dashboard settings...</p>
+                <p id="appSubtitle" class="text-slate-500 mt-1">Initializing components...</p>
             </div>
             <div id="modeBadge" class="text-xs font-bold px-3 py-1 rounded-full shadow-xs"></div>
         </header>
@@ -100,7 +100,7 @@
                 <div id="portfolioList" class="space-y-3">
                     <div id="emptyState" class="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400">
                         <span class="text-4xl">🤖</span>
-                        <p class="mt-2 text-sm">Add automated assets using Manager Mode (?admin=ja).</p>
+                        <p id="emptyStateText" class="mt-2 text-sm">Add automated assets using Manager Mode (?admin=ja).</p>
                     </div>
                 </div>
             </div>
@@ -109,47 +109,55 @@
     </div>
 
     <script>
-        // Your Cloudflare Worker Link
+        // Your Cloudflare Worker Endpoint
         const PROXY_URL = "https://dividend-proxy.corslange.workers.dev"; 
 
-        const urlParams = new URLSearchParams(window.location.search);
-        // Robust parameter query lookup handling trailing slashes cleanly
-        const isAdmin = urlParams.get('admin') === 'ja' || window.location.href.includes('admin=ja');
-
+        // State Engines
         let assets = JSON.parse(localStorage.getItem('autoDividendPortfolio')) || [];
         let editIndex = null;
-
         let comparisonChartInstance = null;
         let calendarChartInstance = null;
 
-        const adminPanel = document.getElementById('adminPanel');
-        const ledgerContainer = document.getElementById('ledgerContainer');
-        const appSubtitle = document.getElementById('appSubtitle');
-        const modeBadge = document.getElementById('modeBadge');
-        const stockForm = document.getElementById('stockForm');
-        const formTitle = document.getElementById('formTitle');
-        const submitBtn = document.getElementById('submitBtn');
-        const cancelEditBtn = document.getElementById('cancelEditBtn');
-        const portfolioList = document.getElementById('portfolioList');
-        const emptyState = document.getElementById('emptyState');
-        const assetCount = document.getElementById('assetCount');
+        // Force execution loop to wait for physical layout readiness safely
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isAdmin = urlParams.get('admin') === 'ja' || window.location.href.includes('admin=ja');
 
-        if (isAdmin) {
-            adminPanel.classList.remove('hidden');
-            ledgerContainer.classList.replace('lg:col-span-3', 'lg:col-span-2');
-            appSubtitle.textContent = "Live automated API manager dashboard.";
-            modeBadge.textContent = "🛠️ API MANAGER MODUS";
-            modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 shadow-xs";
-        } else {
-            adminPanel.classList.add('hidden');
-            ledgerContainer.classList.replace('lg:col-span-2', 'lg:col-span-3');
-            appSubtitle.textContent = "Real-time automated analytics engine visualizer.";
-            modeBadge.textContent = "👀 AUTOMATED VIEWER";
-            modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 shadow-xs";
-        }
+            const adminPanel = document.getElementById('adminPanel');
+            const ledgerContainer = document.getElementById('ledgerContainer');
+            const appSubtitle = document.getElementById('appSubtitle');
+            const modeBadge = document.getElementById('modeBadge');
+            const emptyStateText = document.getElementById('emptyStateText');
 
-        function calculateAndRenderAll() {
+            // Evaluate parameters and adjust visual classes safely
+            if (isAdmin) {
+                adminPanel.classList.remove('hidden');
+                ledgerContainer.className = "lg:col-span-2 space-y-4";
+                appSubtitle.textContent = "Live automated API manager dashboard.";
+                modeBadge.textContent = "🛠️ API MANAGER MODUS";
+                modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 shadow-xs";
+                if(emptyStateText) emptyStateText.textContent = "Use the form on the left to securely add your first index ticker.";
+            } else {
+                adminPanel.classList.add('hidden');
+                ledgerContainer.className = "lg:col-span-3 space-y-4";
+                appSubtitle.textContent = "Real-time automated analytics engine visualizer.";
+                modeBadge.textContent = "👀 AUTOMATED VIEWER";
+                modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 shadow-xs";
+            }
+
+            // Setup programmatic form listener
+            if (isAdmin) {
+                document.getElementById('stockForm').addEventListener('submit', handleFormSubmit);
+            }
+
+            calculateAndRenderAll(isAdmin);
+        });
+
+        function calculateAndRenderAll(isAdminMode) {
             document.querySelectorAll('.asset-card').forEach(card => card.remove());
+            const emptyState = document.getElementById('emptyState');
+            const assetCount = document.getElementById('assetCount');
+            const portfolioList = document.getElementById('portfolioList');
             
             if (!assets || assets.length === 0) {
                 emptyState.style.display = 'block';
@@ -170,7 +178,6 @@
             const chartLabels = [];
             const chartCurrentData = [];
             const chartTargetData = [];
-
             const currentYear = new Date().getFullYear();
 
             assets.forEach((asset, idx) => {
@@ -208,11 +215,11 @@
                 card.className = "asset-card p-5 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:shadow-md";
                 
                 let managementActions = '';
-                if (isAdmin) {
+                if (isAdminMode) {
                     managementActions = `
                         <div class="flex gap-2 w-full md:w-auto justify-end">
                             <button onclick="startEditAsset(${idx})" class="px-3 py-1.5 text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200 transition cursor-pointer">✏️ Edit</button>
-                            <button onclick="deleteAsset(${idx})" class="px-3 py-1.5 text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 transition cursor-pointer">🗑️ Delete</button>
+                            <button onclick="deleteAsset(${idx})" class="px-3 py-1.5 text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 transition cursor-pointer">🗑_ Delete</button>
                         </div>
                     `;
                 }
@@ -300,84 +307,82 @@
             });
         }
 
-        if (isAdmin) {
-            stockForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const tickerInput = document.getElementById('ticker').value.trim().toUpperCase();
-                const documentBtnText = document.getElementById('btnText');
-                
-                documentBtnText.textContent = "Fetching Live Data...";
-                submitBtn.disabled = true;
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const tickerInput = document.getElementById('ticker').value.trim().toUpperCase();
+            const documentBtnText = document.getElementById('btnText');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            documentBtnText.textContent = "Fetching Live Data...";
+            submitBtn.disabled = true;
 
-                try {
-                    const response = await fetch(`${PROXY_URL}?ticker=${tickerInput}`);
-                    const data = await response.json();
+            try {
+                const response = await fetch(`${PROXY_URL}?ticker=${tickerInput}`);
+                const data = await response.json();
 
-                    if (!data || !data.historical) {
-                        alert("Ticker not found or API limits exceeded.");
-                        resetFormState();
-                        return;
-                    }
-
-                    const payload = {
-                        stockName: document.getElementById('stockName').value.trim(),
-                        ticker: tickerInput,
-                        sharesCount: document.getElementById('sharesCount').value,
-                        dividendGoal: document.getElementById('dividendGoal').value,
-                        rawDividends: data.historical
-                    };
-
-                    if (editIndex !== null) {
-                        assets[editIndex] = payload;
-                        editIndex = null;
-                    } else {
-                        assets.push(payload);
-                    }
-
-                    localStorage.setItem('autoDividendPortfolio', JSON.stringify(assets));
-                    calculateAndRenderAll();
+                if (!data || !data.historical) {
+                    alert("Ticker validation failed. Please check the spelling or Cloudflare logs.");
                     resetFormState();
-                } catch (err) {
-                    alert("Error calling server proxy worker backend pipeline.");
-                    console.error(err);
-                } finally {
-                    documentBtnText.textContent = "Save & Fetch Data";
-                    submitBtn.disabled = false;
+                    return;
                 }
-            });
 
-            window.startEditAsset = function(idx) {
-                editIndex = idx;
-                const asset = assets[idx];
-                document.getElementById('stockName').value = asset.stockName;
-                document.getElementById('ticker').value = asset.ticker;
-                document.getElementById('sharesCount').value = asset.sharesCount;
-                document.getElementById('dividendGoal').value = asset.dividendGoal;
+                const payload = {
+                    stockName: document.getElementById('stockName').value.trim(),
+                    ticker: tickerInput,
+                    sharesCount: document.getElementById('sharesCount').value,
+                    dividendGoal: document.getElementById('dividendGoal').value,
+                    rawDividends: data.historical
+                };
 
-                formTitle.textContent = "Modify Asset Position";
-                submitBtn.textContent = "Update Position Info";
-                cancelEditBtn.classList.remove('hidden');
-            };
-
-            window.deleteAsset = function(idx) {
-                if (confirm(`Remove ${assets[idx].ticker}?`)) {
-                    if (editIndex === idx) resetFormState();
-                    assets.splice(idx, 1);
-                    localStorage.setItem('autoDividendPortfolio', JSON.stringify(assets));
-                    calculateAndRenderAll();
+                if (editIndex !== null) {
+                    assets[editIndex] = payload;
+                    editIndex = null;
+                } else {
+                    assets.push(payload);
                 }
-            };
+
+                localStorage.setItem('autoDividendPortfolio', JSON.stringify(assets));
+                calculateAndRenderAll(true);
+                resetFormState();
+            } catch (err) {
+                alert("Error connecting to server proxy gateway.");
+                console.error(err);
+            } finally {
+                documentBtnText.textContent = "Save & Fetch Data";
+                submitBtn.disabled = false;
+            }
         }
+
+        window.startEditAsset = function(idx) {
+            editIndex = idx;
+            const asset = assets[idx];
+            document.getElementById('stockName').value = asset.stockName;
+            document.getElementById('ticker').value = asset.ticker;
+            document.getElementById('sharesCount').value = asset.sharesCount;
+            document.getElementById('dividendGoal').value = asset.dividendGoal;
+
+            document.getElementById('formTitle').textContent = "Modify Asset Position";
+            document.getElementById('submitBtn').textContent = "Update Position Info";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+        };
+
+        window.deleteAsset = function(idx) {
+            if (confirm(`Remove ${assets[idx].ticker}?`)) {
+                if (editIndex === idx) resetFormState();
+                assets.splice(idx, 1);
+                localStorage.setItem('autoDividendPortfolio', JSON.stringify(assets));
+                const urlParams = new URLSearchParams(window.location.search);
+                const isAdmin = urlParams.get('admin') === 'ja' || window.location.href.includes('admin=ja');
+                calculateAndRenderAll(isAdmin);
+            }
+        };
 
         window.resetFormState = function() {
             editIndex = null;
-            stockForm.reset();
-            formTitle.textContent = "Add Automated Position";
-            cancelEditBtn.classList.add('hidden');
+            document.getElementById('stockForm').reset();
+            document.getElementById('formTitle').textContent = "Add Automated Position";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
         };
-
-        // Run calculations
-        calculateAndRenderAll();
     </script>
 </body>
 </html>
