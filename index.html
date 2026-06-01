@@ -7,45 +7,45 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans p-4 md:p-8">
+<body class="bg-slate-50 text-slate-800 font-sans p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-800 pb-6">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 pb-6">
             <div>
-                <h1 class="text-3xl font-extrabold text-emerald-400 tracking-tight flex items-center gap-2">💰 Dividend Tracker</h1>
-                <p id="appSubtitle" class="text-slate-400 mt-1">Laden...</p>
+                <h1 class="text-3xl font-extrabold text-emerald-700 tracking-tight flex items-center gap-2">💰 Dividend Tracker</h1>
+                <p id="appSubtitle" class="text-slate-500 mt-1">Laden...</p>
             </div>
-            <div id="modeBadge" class="text-xs font-bold px-3 py-1 rounded-full shadow-md"></div>
+            <div id="modeBadge" class="text-xs font-bold px-3 py-1 rounded-full shadow-xs"></div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/50 shadow-sm">
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Active Shares</span>
-                <p id="kpiTotalShares" class="text-2xl font-bold text-slate-100 mt-1">0</p>
+                <p id="kpiTotalShares" class="text-2xl font-bold text-slate-800 mt-1">0</p>
             </div>
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/50 shadow-sm">
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current PADI</span>
-                <p id="kpiCurrentPadi" class="text-2xl font-bold text-emerald-400 mt-1">$0.00</p>
+                <p id="kpiCurrentPadi" class="text-2xl font-bold text-emerald-600 mt-1">$0.00</p>
             </div>
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/50 shadow-sm">
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Annual Goal</span>
-                <p id="kpiTargetPadi" class="text-2xl font-bold text-blue-400 mt-1">$0.00</p>
+                <p id="kpiTargetPadi" class="text-2xl font-bold text-blue-600 mt-1">$0.00</p>
             </div>
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/50 shadow-sm">
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Overall Progress</span>
-                <p id="kpiProgress" class="text-2xl font-bold text-amber-400 mt-1">0%</p>
+                <p id="kpiProgress" class="text-2xl font-bold text-amber-600 mt-1">0%</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/50">
-                <h3 class="text-md font-bold text-slate-300 mb-4">📈 Current vs. Target Income (Per Asset)</h3>
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
+                <h3 class="text-md font-bold text-slate-700 mb-4">📈 Current vs. Target Income (Per Asset)</h3>
                 <div class="h-64 flex items-center justify-center">
                     <canvas id="targetVsCurrentChart"></canvas>
                 </div>
             </div>
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/50">
-                <h3 class="text-md font-bold text-slate-300 mb-4">🗓️ Projected Monthly Income Payout Matrix</h3>
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
+                <h3 class="text-md font-bold text-slate-700 mb-4">🗓️ Projected Monthly Income Payout Matrix</h3>
                 <div class="h-64 flex items-center justify-center">
                     <canvas id="monthlyCalendarChart"></canvas>
                 </div>
@@ -55,22 +55,22 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <div id="adminPanel" class="space-y-6 hidden">
-                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
-                    <h2 id="formTitle" class="text-xl font-bold mb-4 text-slate-200">Add New Position</h2>
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
+                    <h2 id="formTitle" class="text-xl font-bold mb-4 text-slate-700">Add New Position</h2>
                     <form id="stockForm" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-semibold mb-1 text-slate-300">Stock/ETF Name</label>
-                            <input type="text" id="stockName" required placeholder="e.g., iShares Core S&P 500" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-100">
+                            <label class="block text-sm font-semibold mb-1 text-slate-600">Stock/ETF Name</label>
+                            <input type="text" id="stockName" required placeholder="e.g., iShares Core S&P 500" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-sm font-semibold mb-1 text-slate-300">Ticker Symbol</label>
-                                <input type="text" id="ticker" required placeholder="e.g., VUSA.AS" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-100 uppercase">
+                                <label class="block text-sm font-semibold mb-1 text-slate-600">Ticker Symbol</label>
+                                <input type="text" id="ticker" required placeholder="e.g., VUSA.AS" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 uppercase">
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold mb-1 text-slate-300">Payout Frequency</label>
-                                <select id="frequency" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-100">
+                                <label class="block text-sm font-semibold mb-1 text-slate-600">Payout Frequency</label>
+                                <select id="frequency" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
                                     <option value="4">Quarterly (4x)</option>
                                     <option value="12">Monthly (12x)</option>
                                     <option value="2">Semi-Annual (2x)</option>
@@ -81,25 +81,25 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-sm font-semibold mb-1 text-slate-300">Shares Quantity</label>
-                                <input type="number" step="any" id="sharesCount" required placeholder="e.g., 25" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-100">
+                                <label class="block text-sm font-semibold mb-1 text-slate-600">Shares Quantity</label>
+                                <input type="number" step="any" id="sharesCount" required placeholder="e.g., 25" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold mb-1 text-slate-300">Estimated Annual Div</label>
-                                <input type="number" step="any" id="currentDiv" required placeholder="e.g., 4.50" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-100">
+                                <label class="block text-sm font-semibold mb-1 text-slate-600">Estimated Annual Div</label>
+                                <input type="number" step="any" id="currentDiv" required placeholder="e.g., 4.50" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold mb-1 text-slate-300">Annual Dividend Goal ($)</label>
-                            <input type="number" step="any" id="dividendGoal" required placeholder="e.g., 500.00" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-100">
+                            <label class="block text-sm font-semibold mb-1 text-slate-600">Annual Dividend Goal ($)</label>
+                            <input type="number" step="any" id="dividendGoal" required placeholder="e.g., 500.00" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
                         </div>
 
                         <div class="space-y-2 pt-2">
-                            <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-sm cursor-pointer">
+                            <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-xs cursor-pointer">
                                 Save Position
                             </button>
-                            <button type="button" id="cancelEditBtn" onclick="resetFormState()" class="w-full hidden bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2 rounded-lg transition duration-200 cursor-pointer">
+                            <button type="button" id="cancelEditBtn" onclick="resetFormState()" class="w-full hidden bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg transition duration-200 cursor-pointer">
                                 Cancel
                             </button>
                         </div>
@@ -109,12 +109,12 @@
 
             <div id="ledgerContainer" class="lg:col-span-3 space-y-4">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-slate-200">Asset Overview</h2>
-                    <span id="assetCount" class="bg-slate-800 text-slate-300 text-xs font-semibold px-2.5 py-1 rounded-full border border-slate-700">0 Assets Tracked</span>
+                    <h2 class="text-xl font-bold text-slate-700">Asset Overview</h2>
+                    <span id="assetCount" class="bg-white text-slate-600 text-xs font-semibold px-2.5 py-1 rounded-full border border-slate-100 shadow-xs">0 Assets Tracked</span>
                 </div>
                 
                 <div id="portfolioList" class="space-y-3">
-                    <div id="emptyState" class="text-center py-12 bg-slate-800 rounded-2xl border border-dashed border-slate-700 text-slate-500">
+                    <div id="emptyState" class="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400">
                         <span class="text-4xl">💼</span>
                         <p class="mt-2 text-sm">Your dividend portfolio is empty.</p>
                     </div>
@@ -125,7 +125,6 @@
     </div>
 
     <script>
-        // Check out Admin configurations from the hockey app architecture template
         const urlParams = new URLSearchParams(window.location.search);
         const isAdmin = urlParams.get('admin') === 'ja';
 
@@ -156,11 +155,11 @@
             ledgerContainer.classList.replace('lg:col-span-3', 'lg:col-span-2');
             appSubtitle.textContent = "Manage equity shares, annual income payout metrics, and target yields.";
             modeBadge.textContent = "🛠️ PORTFOLIO MANAGER";
-            modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-purple-900/50 text-purple-300 border border-purple-700";
+            modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 shadow-xs";
         } else {
             appSubtitle.textContent = "Real-time read-only monitoring of yield timelines and targets.";
             modeBadge.textContent = "👀 VIEWER DASHBOARD";
-            modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700";
+            modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 shadow-xs";
         }
 
         // --- CORE COMPUTATIONAL ENGINE & KPIS ---
@@ -186,7 +185,6 @@
 
         // --- GRAPHICS DATA VISUALIZATION LAYER ---
         function renderCharts() {
-            // Destroy older instances to refresh layout cleanups cleanly
             if (comparisonChartInstance) comparisonChartInstance.destroy();
             if (calendarChartInstance) calendarChartInstance.destroy();
 
@@ -201,33 +199,35 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Current Income', data: currentData, backgroundColor: '#34d399' },
-                        { label: 'Target Goal', data: targetData, backgroundColor: '#60a5fa' }
+                        { label: 'Current Income', data: currentData, backgroundColor: '#10b981' },
+                        { label: 'Target Goal', data: targetData, backgroundColor: '#3b82f6' }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } },
-                    plugins: { legend: { labels: { color: '#f1f5f9' } } }
+                    scales: { 
+                        y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b' } }, 
+                        x: { ticks: { color: '#64748b' } } 
+                    },
+                    plugins: { legend: { labels: { color: '#334155' } } }
                 }
             });
 
-            // Chart 2 Generator: Simulated Monthly Distribution Timelines
-            // Dynamically split cash income down seasonal payouts schedules over standard quarters
+            // Chart 2 Generator: Monthly Distribution Timelines
             let monthlyDistribution = Array(12).fill(0);
             assets.forEach(asset => {
                 const annualizedCash = Number(asset.sharesCount) * Number(asset.currentDiv);
                 const paymentCount = Number(asset.frequency);
                 const payoutPerPeriod = annualizedCash / paymentCount;
 
-                if (paymentCount === 12) { // Monthly
+                if (paymentCount === 12) {
                     for (let m = 0; m < 12; m++) monthlyDistribution[m] += payoutPerPeriod;
-                } else if (paymentCount === 4) { // Quarterly (Jan, Apr, Jul, Oct cycle baseline)
+                } else if (paymentCount === 4) {
                     [0, 3, 6, 9].forEach(m => monthlyDistribution[m] += payoutPerPeriod);
-                } else if (paymentCount === 2) { // Semi-Annual
+                } else if (paymentCount === 2) {
                     [5, 11].forEach(m => monthlyDistribution[m] += payoutPerPeriod);
-                } else { // Annual (Distributed at December base scale)
+                } else {
                     monthlyDistribution[11] += payoutPerPeriod;
                 }
             });
@@ -240,8 +240,8 @@
                     datasets: [{
                         label: 'Projected Cashflow',
                         data: monthlyDistribution,
-                        borderColor: '#fbbf24',
-                        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.05)',
                         fill: true,
                         tension: 0.3
                     }]
@@ -249,8 +249,11 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } },
-                    plugins: { legend: { labels: { color: '#f1f5f9' } } }
+                    scales: { 
+                        y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b' } }, 
+                        x: { ticks: { color: '#64748b' } } 
+                    },
+                    plugins: { legend: { labels: { color: '#334155' } } }
                 }
             });
         }
@@ -275,14 +278,14 @@
                 const goalProgressPercent = (totalCurrentAnnualValue / Number(asset.dividendGoal)) * 100;
 
                 const card = document.createElement('div');
-                card.className = "asset-card p-5 rounded-2xl bg-slate-800 border border-slate-700/60 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:border-slate-600";
+                card.className = "asset-card p-5 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:shadow-md";
                 
                 let managementActions = '';
                 if (isAdmin) {
                     managementActions = `
                         <div class="flex gap-2 w-full md:w-auto justify-end">
-                            <button onclick="startEditAsset(${idx})" class="px-3 py-1.5 text-xs bg-amber-600/20 text-amber-400 hover:bg-amber-600/30 rounded-lg border border-amber-500/30 transition cursor-pointer">✏️ Edit</button>
-                            <button onclick="deleteAsset(${idx})" class="px-3 py-1.5 text-xs bg-rose-600/20 text-rose-400 hover:bg-rose-600/30 rounded-lg border border-rose-500/30 transition cursor-pointer">🗑️ Delete</button>
+                            <button onclick="startEditAsset(${idx})" class="px-3 py-1.5 text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200 transition cursor-pointer">✏️ Edit</button>
+                            <button onclick="deleteAsset(${idx})" class="px-3 py-1.5 text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 transition cursor-pointer">🗑_ Delete</button>
                         </div>
                     `;
                 }
@@ -290,31 +293,31 @@
                 card.innerHTML = `
                     <div class="flex-1 w-full">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase">${asset.ticker}</span>
+                            <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-md border border-emerald-200 uppercase">${asset.ticker}</span>
                             <span class="text-slate-400 text-xs font-medium">Freq: ${asset.frequency}x/year</span>
                         </div>
-                        <h3 class="text-lg font-bold text-slate-100 mt-1">${asset.stockName}</h3>
+                        <h3 class="text-lg font-bold text-slate-800 mt-1">${asset.stockName}</h3>
                         
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-slate-700/50 text-sm">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-slate-100 text-sm">
                             <div>
                                 <span class="block text-[10px] uppercase font-bold text-slate-400">Shares Owned</span>
-                                <span class="font-semibold text-slate-200">${Number(asset.sharesCount).toLocaleString()}</span>
+                                <span class="font-semibold text-slate-700">${Number(asset.sharesCount).toLocaleString()}</span>
                             </div>
                             <div>
                                 <span class="block text-[10px] uppercase font-bold text-slate-400">Est. Payout / Share</span>
-                                <span class="font-semibold text-slate-200">$${Number(asset.currentDiv).toFixed(2)}</span>
+                                <span class="font-semibold text-slate-700">$${Number(asset.currentDiv).toFixed(2)}</span>
                             </div>
                             <div>
                                 <span class="block text-[10px] uppercase font-bold text-slate-400">Current PADI</span>
-                                <span class="font-semibold text-emerald-400">$${totalCurrentAnnualValue.toFixed(2)}</span>
+                                <span class="font-semibold text-emerald-600">$${totalCurrentAnnualValue.toFixed(2)}</span>
                             </div>
                             <div>
                                 <span class="block text-[10px] uppercase font-bold text-slate-400">Goal Target</span>
-                                <span class="font-semibold text-blue-400">$${Number(asset.dividendGoal).toFixed(2)}</span>
+                                <span class="font-semibold text-blue-600">$${Number(asset.dividendGoal).toFixed(2)}</span>
                             </div>
                         </div>
 
-                        <div class="w-full bg-slate-900 rounded-full h-1.5 mt-3 overflow-hidden">
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 mt-3 overflow-hidden">
                             <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full" style="width: ${Math.min(goalProgressPercent, 100)}%"></div>
                         </div>
                         <span class="text-[10px] text-slate-400 mt-1 block">Goal Milestone Progress: ${goalProgressPercent.toFixed(1)}%</span>
@@ -367,7 +370,7 @@
 
                 formTitle.textContent = "Modify Asset Position";
                 submitBtn.textContent = "Update Position Info";
-                submitBtn.className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 rounded-lg transition duration-200 cursor-pointer shadow-sm";
+                submitBtn.className = "w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 rounded-lg transition duration-200 cursor-pointer shadow-xs";
                 cancelEditBtn.classList.remove('hidden');
 
                 adminPanel.scrollIntoView({ behavior: 'smooth' });
@@ -388,7 +391,7 @@
             stockForm.reset();
             formTitle.textContent = "Add New Position";
             submitBtn.textContent = "Save Position";
-            submitBtn.className = "w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg transition duration-200 cursor-pointer shadow-sm";
+            submitBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition duration-200 cursor-pointer shadow-xs";
             cancelEditBtn.classList.add('hidden');
         };
 
