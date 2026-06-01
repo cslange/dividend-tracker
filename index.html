@@ -13,7 +13,7 @@
         <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 pb-6">
             <div>
                 <h1 class="text-3xl font-extrabold text-emerald-700 tracking-tight flex items-center gap-2">🤖 Automated Dividend Tracker</h1>
-                <p id="appSubtitle" class="text-slate-500 mt-1">Laden...</p>
+                <p id="appSubtitle" class="text-slate-500 mt-1">Manage equity shares, annual income payout metrics, and target yields.</p>
             </div>
             <div id="modeBadge" class="text-xs font-bold px-3 py-1 rounded-full shadow-xs"></div>
         </header>
@@ -65,4 +65,205 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-
+                                <label class="block text-sm font-semibold mb-1 text-slate-600">Ticker Symbol</label>
+                                <input type="text" id="ticker" required placeholder="e.g., O" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 uppercase">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-1 text-slate-600">Shares Quantity</label>
+                                <input type="number" step="any" id="sharesCount" required placeholder="e.g., 50" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-1 text-slate-600">Annual Dividend Goal ($)</label>
+                            <input type="number" step="any" id="dividendGoal" required placeholder="e.g., 250.00" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800">
+                        </div>
+
+                        <div class="space-y-2 pt-2">
+                            <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-xs cursor-pointer flex justify-center items-center gap-2">
+                                <span id="btnText">Save & Fetch Data</span>
+                            </button>
+                            <button type="button" id="cancelEditBtn" onclick="resetFormState()" class="w-full hidden bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg transition duration-200 cursor-pointer">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="ledgerContainer" class="lg:col-span-3 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-700">Automated Asset Positions</h2>
+                    <span id="assetCount" class="bg-white text-slate-600 text-xs font-semibold px-2.5 py-1 rounded-full border border-slate-100 shadow-xs">0 Assets</span>
+                </div>
+                
+                <div id="portfolioList" class="space-y-3">
+                    <div id="emptyState" class="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                        <span class="text-4xl">🤖</span>
+                        <p class="mt-2 text-sm">Add automated assets using Manager Mode (?admin=ja).</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Your Cloudflare Worker Link
+        const PROXY_URL = "https://dividend-proxy.corslange.workers.dev"; 
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdmin = urlParams.get('admin') === 'ja';
+
+        let assets = JSON.parse(localStorage.getItem('autoDividendPortfolio')) || [];
+        let editIndex = null;
+
+        let comparisonChartInstance = null;
+        let calendarChartInstance = null;
+
+        const adminPanel = document.getElementById('adminPanel');
+        const ledgerContainer = document.getElementById('ledgerContainer');
+        const appSubtitle = document.getElementById('appSubtitle');
+        const modeBadge = document.getElementById('modeBadge');
+        const stockForm = document.getElementById('stockForm');
+        const formTitle = document.getElementById('formTitle');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const portfolioList = document.getElementById('portfolioList');
+        const emptyState = document.getElementById('emptyState');
+        const assetCount = document.getElementById('assetCount');
+
+        if (isAdmin) {
+            adminPanel.classList.remove('hidden');
+            ledgerContainer.classList.replace('lg:col-span-3', 'lg:col-span-2');
+            appSubtitle.textContent = "Live automated API manager dashboard.";
+            modeBadge.textContent = "🛠️ API MANAGER MODUS";
+            modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 shadow-xs";
+        } else {
+            appSubtitle.textContent = "Real-time automated analytics engine visualizer.";
+            modeBadge.textContent = "👀 AUTOMATED VIEWER";
+            modeBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 shadow-xs";
+        }
+
+        function calculateAndRenderAll() {
+            document.querySelectorAll('.asset-card').forEach(card => card.remove());
+            
+            if (!assets || assets.length === 0) {
+                emptyState.style.display = 'block';
+                assetCount.textContent = "0 Assets";
+                updateKpis(0, 0, 0);
+                drawCharts([], [], [], Array(12).fill(0));
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            assetCount.textContent = `${assets.length} Asset${assets.length !== 1 ? 's' : ''}`;
+
+            let totalShares = 0;
+            let currentPadiSum = 0;
+            let targetPadiSum = 0;
+            let monthlyDistribution = Array(12).fill(0);
+
+            const chartLabels = [];
+            const chartCurrentData = [];
+            const chartTargetData = [];
+
+            const currentYear = new Date().getFullYear();
+
+            assets.forEach((asset, idx) => {
+                const rawData = asset.rawDividends || [];
+                // Filter payouts to calculate an expected annual average baseline smoothly
+                const standardYearlyPayouts = rawData.filter(d => new Date(d.date).getFullYear() >= (currentYear - 2));
+                
+                // If there are dividend payments, sum up the total payout per share per year
+                let totalAnnualValuePerShare = 0;
+                if (standardYearlyPayouts.length > 0) {
+                     const totalSum = standardYearlyPayouts.reduce((sum, item) => sum + (item.adjDividend || item.dividend || 0), 0);
+                     // Average it out over unique years found in data
+                     const uniqueYears = [...new Set(standardYearlyPayouts.map(d => new Date(d.date).getFullYear()))].length || 1;
+                     totalAnnualValuePerShare = totalSum / uniqueYears;
+                }
+                
+                const totalCurrentAnnualValue = totalAnnualValuePerShare * Number(asset.sharesCount);
+                
+                totalShares += Number(asset.sharesCount);
+                currentPadiSum += totalCurrentAnnualValue;
+                targetPadiSum += Number(asset.dividendGoal);
+
+                chartLabels.push(asset.ticker);
+                chartCurrentData.push(totalCurrentAnnualValue);
+                chartTargetData.push(Number(asset.dividendGoal));
+
+                rawData.forEach(d => {
+                    const divDate = new Date(d.date);
+                    if (divDate.getFullYear() === (currentYear - 1) || divDate.getFullYear() === currentYear) {
+                        const monthIndex = divDate.getMonth(); 
+                        monthlyDistribution[monthIndex] += ((d.adjDividend || d.dividend || 0) * Number(asset.sharesCount));
+                    }
+                });
+
+                const goalProgressPercent = Number(asset.dividendGoal) > 0 ? (totalCurrentAnnualValue / Number(asset.dividendGoal)) * 100 : 0;
+
+                const card = document.createElement('div');
+                card.className = "asset-card p-5 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:shadow-md";
+                
+                let managementActions = '';
+                if (isAdmin) {
+                    managementActions = `
+                        <div class="flex gap-2 w-full md:w-auto justify-end">
+                            <button onclick="startEditAsset(${idx})" class="px-3 py-1.5 text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200 transition cursor-pointer">✏️ Edit</button>
+                            <button onclick="deleteAsset(${idx})" class="px-3 py-1.5 text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 transition cursor-pointer">🗑️ Delete</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex-1 w-full">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-md border border-emerald-200 uppercase">${asset.ticker}</span>
+                            <span class="text-slate-400 text-xs font-medium">Auto API Verified</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mt-1">${asset.stockName}</h3>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-slate-100 text-sm">
+                            <div>
+                                <span class="block text-[10px] uppercase font-bold text-slate-400">Shares Quantity</span>
+                                <span class="font-semibold text-slate-700">${Number(asset.sharesCount).toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] uppercase font-bold text-slate-400">Est. Div / Share</span>
+                                <span class="font-semibold text-slate-700">$${totalAnnualValuePerShare.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] uppercase font-bold text-slate-400">Computed PADI</span>
+                                <span class="font-semibold text-emerald-600">$${totalCurrentAnnualValue.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] uppercase font-bold text-slate-400">Goal Target</span>
+                                <span class="font-semibold text-blue-600">$${Number(asset.dividendGoal).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 mt-3 overflow-hidden">
+                            <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full" style="width: ${Math.min(goalProgressPercent, 100)}%"></div>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Goal Milestone Progress: ${goalProgressPercent.toFixed(1)}%</span>
+                    </div>
+                    ${managementActions}
+                `;
+                portfolioList.appendChild(card);
+            });
+
+            updateKpis(totalShares, currentPadiSum, targetPadiSum);
+            drawCharts(chartLabels, chartCurrentData, chartTargetData, monthlyDistribution);
+        }
+
+        function updateKpis(shares, current, target) {
+            document.getElementById('kpiTotalShares').textContent = shares.toLocaleString(undefined, {maximumFractionDigits: 2});
+            document.getElementById('kpiCurrentPadi').textContent = `$${current.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('kpiTargetPadi').textContent = `$${target.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            const progressRatio = target > 0 ? (current / target) * 100 : 0;
+            document.getElementById('kpiProgress').textContent = `${progressRatio.toFixed(1)}%`;
+        }
+
+        function drawCharts(labels, currentData, targetData, monthlyDistribution) {
+            if (comparisonChartInstance)
